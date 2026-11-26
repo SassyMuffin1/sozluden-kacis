@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
+  <title>Sözlüden Kaçış</title>
+  <script type="text/javascript">
+      (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "zjsmqvkri8");
+  </script>
+  <style>
+    :root {
+      --flash-ink: #240703;
+      --flash-red-top: #ef3b2d;
+      --flash-red-bot: #9d110c;
+      --flash-gold-top: #ffe066;
+      --flash-gold-bot: #f59f00;
+      --flash-cream-top: #fff6de;
+      --flash-cream-bot: #f2d8a7;
+      --touch-btn-size: 70px;
+      --touch-jump-size: 80px;
+      --touch-font-size: 25px;
+      --touch-gap: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+      background:
+        radial-gradient(circle at 50% 35%, #3a120a 0%, #1a0604 58%, #0a0302 100%);
+      font-family: "Trebuchet MS", "Arial Black", Impact, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Full-viewport centered 2:1 Flash game stage */
+    #game-stage {
+      position: relative;
+      width: min(100vw, calc(100vh * 2));
+      height: min(100vh, calc(100vw / 2));
+      background: #000;
+      border: 2px solid var(--flash-ink);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1.5px #f59f00,
+        0 12px 36px rgba(0, 0, 0, 0.8);
+      touch-action: none;
+    }
+
+    #container {
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    ruffle-player {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Integrated Flash-style HUD overlay */
+    #flash-hud {
+      position: absolute;
+      top: max(8px, env(safe-area-inset-top));
+      left: max(10px, env(safe-area-inset-left));
+      right: max(10px, env(safe-area-inset-right));
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    .hud-left {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .hud-group {
+      pointer-events: auto;
+      position: relative;
+    }
+
+    .hud-right {
+      flex-shrink: 0;
+    }
+
+    /* Character, Chaser & Button-Size Selector Pills */
+    .char-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2.5px;
+      background: linear-gradient(180deg, rgba(93, 22, 12, 0.92) 0%, rgba(43, 8, 4, 0.92) 100%);
+      border: 2px solid var(--flash-ink);
+      border-radius: 999px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 224, 102, 0.32),
+        0 2.5px 0 var(--flash-ink),
+        0 4px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    #chaser-pill {
+      gap: 1px;
+    }
+
+    .char-pill-label {
+      padding: 0 5px 0 7px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #ffd479;
+      text-shadow: 0 1.5px 0 var(--flash-ink);
+    }
+
+    .char-btn,
+    .chaser-btn {
+      appearance: none;
+      border: 1.5px solid transparent;
+      background: transparent;
+      color: #fce9c4;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      cursor: pointer;
+      text-shadow: 0 1.5px 0 var(--flash-ink);
+      transition: transform 0.08s ease, background 0.12s ease;
+    }
+
+    .chaser-btn {
+      padding: 3px 6.5px;
+      font-size: 10.5px;
+    }
+
+    .char-btn:active,
+    .chaser-btn:active {
+      transform: translateY(1px);
+    }
+
+    .char-btn.active,
+    .chaser-btn.active {
+      background: linear-gradient(180deg, var(--flash-gold-top) 0%, var(--flash-gold-bot) 100%);
+      color: var(--flash-ink);
+      border-color: var(--flash-ink);
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.65),
+        0 1px 0 var(--flash-ink);
+    }
+
+    /* Level Picker Trigger Button */
+    .level-trigger {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4.5px 11px;
+      background: linear-gradient(180deg, var(--flash-red-top) 0%, var(--flash-red-bot) 100%);
+      color: #fff6de;
+      border: 2px solid var(--flash-ink);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      white-space: nowrap;
+      text-shadow:
+        -1px -1px 0 var(--flash-ink),
+         1px -1px 0 var(--flash-ink),
+        -1px  1px 0 var(--flash-ink),
+         1px  1px 0 var(--flash-ink);
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 214, 153, 0.55),
+        0 2.5px 0 var(--flash-ink),
+        0 4px 10px rgba(0, 0, 0, 0.45);
+      transition: transform 0.08s ease, filter 0.12s ease;
+    }
+
+    .level-trigger:active,
+    .level-trigger[aria-expanded="true"] {
+      transform: translateY(1px);
+      background: linear-gradient(180deg, #ff513f 0%, #b5150f 100%);
+    }
+
+    .level-trigger .caret {
+      font-size: 10px;
+      color: #ffe066;
+      transition: transform 0.16s ease;
+    }
+
+    .level-trigger[aria-expanded="true"] .caret {
+      transform: rotate(180deg);
+    }
+
+    /* Flash-style Level Picker Card Overlay */
+    #level-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(14, 4, 2, 0.55);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      padding: 12px;
+    }
+
+    #level-backdrop.open {
+      display: flex;
+    }
+
+    .level-card {
+      width: min(560px, 94%);
+      max-height: 92%;
+      overflow-y: auto;
+      background: linear-gradient(180deg, var(--flash-cream-top) 0%, var(--flash-cream-bot) 100%);
+      border: 3px solid var(--flash-ink);
+      border-radius: 13px;
+      padding: 10px 12px 12px;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.85),
+        0 5px 0 var(--flash-ink),
+        0 16px 36px rgba(0, 0, 0, 0.72);
+      color: var(--flash-ink);
+      animation: popIn 0.14s ease-out;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.94) translateY(-4px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .level-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding: 5px 9px;
+      background: linear-gradient(180deg, var(--flash-red-top) 0%, var(--flash-red-bot) 100%);
+      border: 2px solid var(--flash-ink);
+      border-radius: 8px;
+      box-shadow: inset 0 1.5px 0 rgba(255, 224, 153, 0.5);
+    }
+
+    .level-card-title {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #ffe066;
+      text-shadow:
+        -1px -1px 0 var(--flash-ink),
+         1px -1px 0 var(--flash-ink),
+        -1px  1px 0 var(--flash-ink),
+         1px  1px 0 var(--flash-ink);
+    }
+
+    .level-card-hint {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #fff3d6;
+      opacity: 0.92;
+      margin-left: auto;
+      margin-right: 8px;
+      text-shadow: 0 1px 0 var(--flash-ink);
+    }
+
+    .close-btn {
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 2px solid var(--flash-ink);
+      background: linear-gradient(180deg, var(--flash-gold-top) 0%, var(--flash-gold-bot) 100%);
+      color: var(--flash-ink);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1.5px 0 var(--flash-ink);
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .map-btn {
+      appearance: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      width: 100%;
+      padding: 6px 9px;
+      background: linear-gradient(180deg, #fffaf0 0%, #efd29c 100%);
+      border: 2px solid var(--flash-ink);
+      border-radius: 8px;
+      color: var(--flash-ink);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: left;
+      cursor: pointer;
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.85),
+        0 2px 0 var(--flash-ink);
+    }
+
+    .map-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 var(--flash-ink);
+    }
+
+    .map-btn.active {
+      background: linear-gradient(180deg, var(--flash-gold-top) 0%, var(--flash-gold-bot) 100%);
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.75),
+        0 2px 0 var(--flash-ink);
+    }
+
+    .map-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .map-icon {
+      font-size: 14px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .map-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .map-badge {
+      font-size: 9.5px;
+      font-weight: 900;
+      padding: 1.5px 5px;
+      border-radius: 999px;
+      border: 1.5px solid var(--flash-ink);
+      background: #9d110c;
+      color: #ffe066;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .map-btn.active .map-badge {
+      background: var(--flash-ink);
+      color: #ffe066;
+    }
+
+    /* Android Minimal Translucent Multi-Touch Controls */
+    #touch-controls {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 25;
+      touch-action: none;
+    }
+
+    #touch-controls[data-size="md"] {
+      --touch-btn-size: 70px;
+      --touch-jump-size: 80px;
+      --touch-font-size: 25px;
+      --touch-gap: 14px;
+    }
+
+    .touch-cluster {
+      position: fixed;
+      bottom: max(14px, env(safe-area-inset-bottom));
+      display: flex;
+      align-items: center;
+      gap: var(--touch-gap);
+      pointer-events: none;
+    }
+
+    .touch-cluster-left {
+      left: max(16px, env(safe-area-inset-left));
+    }
+
+    .touch-cluster-right {
+      right: max(16px, env(safe-area-inset-right));
+    }
+
+    .touch-btn {
+      pointer-events: auto;
+      touch-action: none;
+      appearance: none;
+      width: var(--touch-btn-size);
+      height: var(--touch-btn-size);
+      border-radius: 50%;
+      border: 2px solid rgba(255, 224, 102, 0.48);
+      background: rgba(36, 7, 3, 0.34);
+      color: rgba(255, 246, 222, 0.88);
+      font-family: inherit;
+      font-size: var(--touch-font-size);
+      font-weight: 900;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 4px 12px rgba(0, 0, 0, 0.35);
+      transition: transform 0.05s ease, background 0.06s ease, border-color 0.06s ease;
+    }
+
+    .touch-btn.touch-jump {
+      width: var(--touch-jump-size);
+      height: var(--touch-jump-size);
+      border-color: rgba(255, 224, 102, 0.56);
+    }
+
+    .touch-btn.pressed {
+      background: rgba(245, 159, 0, 0.58);
+      border-color: rgba(255, 224, 102, 0.96);
+      color: #fffdf5;
+      transform: scale(0.93);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 0 14px rgba(255, 224, 102, 0.4);
+    }
+
+    /* Startup Legal Disclaimer Modal (Dark-Gold Serious Legal Card) */
+    #disclaimer-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 5, 3, 0.82);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      z-index: 60;
+      opacity: 1;
+      transition: opacity 0.22s ease, visibility 0.22s ease;
+    }
+
+    #disclaimer-backdrop.dismissed {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .disclaimer-card {
+      width: min(460px, 92%);
+      max-height: 92%;
+      overflow-y: auto;
+      background: linear-gradient(180deg, #1b150e 0%, #0e0a06 100%);
+      border: 2px solid #d4a63f;
+      border-radius: 10px;
+      padding: 14px 18px 15px;
+      box-shadow:
+        0 0 0 1px rgba(255, 224, 102, 0.22),
+        inset 0 1px 0 rgba(255, 224, 102, 0.22),
+        0 18px 44px rgba(0, 0, 0, 0.88);
+      color: #f4e6c8;
+      text-align: center;
+      animation: popIn 0.16s ease-out;
+    }
+
+    .disclaimer-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(212, 166, 63, 0.38);
+    }
+
+    .disclaimer-seal {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .disclaimer-title {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #f5c95c;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    .disclaimer-body {
+      margin: 0 0 13px;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 12.5px;
+      line-height: 1.5;
+      font-weight: 500;
+      color: #e8dcc4;
+    }
+
+    .disclaimer-btn {
+      appearance: none;
+      padding: 7px 18px;
+      border-radius: 6px;
+      border: 1.5px solid #ffe066;
+      background: linear-gradient(180deg, #e0ad38 0%, #a87412 100%);
+      color: #190d03;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 248, 214, 0.6),
+        0 3px 10px rgba(0, 0, 0, 0.5);
+      transition: transform 0.08s ease, filter 0.12s ease;
+    }
+
+    .disclaimer-btn:active {
+      transform: translateY(1px);
+      filter: brightness(0.95);
+    }
+
+    /* Password Gate Modal */
+    #auth-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 5, 2, 0.94);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9999;
+    }
+
+    .auth-card {
+      width: min(360px, 92%);
+      background: linear-gradient(180deg, #1b150e 0%, #0e0a06 100%);
+      border: 2px solid #d4a63f;
+      border-radius: 10px;
+      padding: 16px 18px 18px;
+      box-shadow:
+        0 0 0 1px rgba(255, 224, 102, 0.22),
+        inset 0 1px 0 rgba(255, 224, 102, 0.22),
+        0 18px 44px rgba(0, 0, 0, 0.88);
+      color: #f4e6c8;
+      text-align: center;
+      animation: popIn 0.16s ease-out;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 9px 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      border: 1.5px solid rgba(212, 166, 63, 0.65);
+      background: rgba(8, 5, 3, 0.85);
+      color: #fff6de;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      text-align: center;
+      outline: none;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .auth-input:focus {
+      border-color: #ffe066;
+      box-shadow: 0 0 0 2px rgba(255, 224, 102, 0.22);
+    }
+
+    .auth-error {
+      min-height: 18px;
+      margin-bottom: 8px;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #ff6b6b;
+    }
+
+    .auth-btn {
+      width: 100%;
+    }
+
+    @media (max-width: 860px) {
+      .char-pill-label {
+        display: none;
+      }
+      .char-btn {
+        font-size: 10px;
+        padding: 2.5px 6px;
+      }
+      .chaser-btn {
+        font-size: 9.5px;
+        padding: 2.5px 5px;
+      }
+      .level-trigger {
+        font-size: 10.5px;
+        padding: 4px 8.5px;
+      }
+      .level-card-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-stage">
+    <div id="container"></div>
+
+    <!-- Integrated Flash-style HUD -->
+    <div id="flash-hud">
+      <div class="hud-left">
+        <div class="hud-group">
+          <div class="char-pill" role="group" aria-label="Karakter Seçici">
+            <span class="char-pill-label">Karakter</span>
+            <button class="char-btn" type="button" data-char="player_bilge.swf">Bilge</button>
+            <button class="char-btn" type="button" data-char="player_ahmet.swf">Ahmet</button>
+            <button class="char-btn" type="button" data-char="player_player.swf">Orijinal</button>
+          </div>
+        </div>
+
+        <div class="hud-group">
+          <div id="chaser-pill" class="char-pill" role="group" aria-label="Kovalayan Seçici">
+            <span class="char-pill-label">Kovalayan</span>
+            <button class="chaser-btn" type="button" data-chaser="beril" title="Beril Hoca">Beril</button>
+            <button class="chaser-btn" type="button" data-chaser="ali" title="Ali Hoca">Ali</button>
+            <button class="chaser-btn" type="button" data-chaser="sema" title="Sema Hoca">Sema</button>
+            <button class="chaser-btn" type="button" data-chaser="kabus" title="Kabus Modu: 3 Hoca Birden!">Kabus</button>
+            <button id="chaser-orig-btn" class="chaser-btn" type="button" data-chaser="orig">Orijinal</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="hud-group hud-right">
+        <button
+          id="level-trigger"
+          class="level-trigger"
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+        >
+          <span id="level-trigger-text">Bölüm: Hastane</span>
+          <span class="caret" aria-hidden="true">▾</span>
+        </button>
+      </div>
+    </div>
+
+
+    <!-- Level Picker Overlay Card -->
+    <div id="level-backdrop" role="dialog" aria-modal="true" aria-labelledby="level-card-title">
+      <div class="level-card">
+        <div class="level-card-header">
+          <span id="level-card-title" class="level-card-title">Bölüm Seçimi</span>
+          <span class="level-card-hint">Play → Pamplona 1 seçili haritayı açar</span>
+          <button id="level-close" class="close-btn" type="button" aria-label="Kapat">×</button>
+        </div>
+        <div id="level-grid" class="level-grid"></div>
+      </div>
+    </div>
+
+    <!-- Startup Legal Disclaimer Modal -->
+    <div id="disclaimer-backdrop" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title">
+      <div class="disclaimer-card">
+        <div class="disclaimer-header">
+          <span class="disclaimer-seal" aria-hidden="true">⚖️</span>
+          <span id="disclaimer-title" class="disclaimer-title">YASAL UYARI</span>
+        </div>
+        <p class="disclaimer-body">
+          Bu eserde yer alan tüm karakterler hayal ürünüdür. Yaşayan veya ölmüş gerçek kişilerle olan herhangi bir benzerlik tamamen tesadüftür.
+        </p>
+        <button id="disclaimer-accept" class="disclaimer-btn" type="button">Anladım — Oyuna Geç</button>
+      </div>
+    </div>
+
+    <div id="auth-backdrop" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <form id="auth-form" class="auth-card" autocomplete="off">
+        <div class="disclaimer-header">
+          <span class="disclaimer-seal" aria-hidden="true">🔒</span>
+          <span id="auth-title" class="disclaimer-title">GİRİŞ ŞİFRESİ</span>
+        </div>
+        <p class="disclaimer-body">Oyuna girmek için şifreyi girin.</p>
+        <input id="auth-input" class="auth-input" type="password" placeholder="Şifre..." autocomplete="off" required />
+        <div id="auth-error" class="auth-error" aria-live="polite"></div>
+        <button id="auth-submit" class="disclaimer-btn auth-btn" type="submit">Giriş Yap</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Minimal Translucent Multi-Touch Controls -->
+  <div id="touch-controls" data-size="md">
+    <div class="touch-cluster touch-cluster-left">
+      <button
+        class="touch-btn"
+        type="button"
+        data-keys="ArrowLeft"
+        aria-label="Sol"
+      >◀</button>
+      <button
+        class="touch-btn"
+        type="button"
+        data-keys="ArrowRight"
+        aria-label="Sağ"
+      >▶</button>
+    </div>
+    <div class="touch-cluster touch-cluster-right">
+      <button
+        class="touch-btn touch-jump"
+        type="button"
+        data-keys="Space,ArrowUp"
+        aria-label="Zıpla"
+      >⬆</button>
+    </div>
+  </div>
+
+  <script>
+    const CHARACTERS = new Set([
+      "player_bilge.swf",
+      "player_ahmet.swf",
+      "player_player.swf",
+    ]);
+
+    const CHASERS = new Set(["beril", "ali", "sema", "kabus", "orig"]);
+    const CHASER_DIRS = {
+      beril: "content",
+      ali: "content_ali",
+      sema: "content_sema",
+      kabus: "content_kabus",
+      orig: "content_orig",
+    };
+    const ACIL_FILES = {
+      beril: "level-acil.swf",
+      ali: "level-acil-ali.swf",
+      sema: "level-acil-sema.swf",
+      kabus: "level-acil-kabus.swf",
+      orig: "level-acil.swf",
+    };
+
+    const MAPS = [
+      { swf: "level-acil.swf", icon: "🏥", label: "Hastane (Acil)", shortLabel: "Hastane", tag: "MOD" },
+      { swf: "level-pamp1.swf", icon: "🐂", label: "Pamplona 1", shortLabel: "Pamplona 1" },
+      { swf: "level-munich.swf", icon: "🍺", label: "Münih", shortLabel: "Münih" },
+      { swf: "level-amsterdam.swf", icon: "🚲", label: "Amsterdam", shortLabel: "Amsterdam" },
+      { swf: "level-london.swf", icon: "🎡", label: "Londra", shortLabel: "Londra" },
+      { swf: "level-geneva.swf", icon: "🏂", label: "Cenevre", shortLabel: "Cenevre" },
+      { swf: "level-paris.swf", icon: "🗼", label: "Paris", shortLabel: "Paris" },
+      { swf: "level-moscow.swf", icon: "❄️", label: "Moskova", shortLabel: "Moskova" },
+      { swf: "level-stockholm.swf", icon: "🏰", label: "Stokholm", shortLabel: "Stokholm" },
+      { swf: "level-pamp2.swf", icon: "🔥", label: "Pamplona 2", shortLabel: "Pamplona 2" },
+    ];
+
+    const VALID_MAPS = new Set(MAPS.map((m) => m.swf));
+
+    const savedChar = localStorage.getItem("pamplona_char");
+    const savedChaser = localStorage.getItem("pamplona_chaser");
+    const savedMap = localStorage.getItem("pamplona_map");
+
+    const modState = {
+      character: CHARACTERS.has(savedChar) ? savedChar : "player_bilge.swf",
+      chaser: CHASERS.has(savedChaser) ? savedChaser : "beril",
+      map: VALID_MAPS.has(savedMap) ? savedMap : "level-acil.swf",
+    };
+
+    localStorage.setItem("pamplona_char", modState.character);
+    localStorage.setItem("pamplona_chaser", modState.chaser);
+    localStorage.setItem("pamplona_map", modState.map);
+
+    function resolveLevelPath(mapSwf, chaser) {
+      if (mapSwf === "level-acil.swf") {
+        return "content/" + (ACIL_FILES[chaser] || "level-acil.swf");
+      }
+      const dir = CHASER_DIRS[chaser] || "content";
+      return dir + "/" + mapSwf;
+    }
+
+    function rewriteModUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== "string") return rawUrl;
+      let out = rawUrl;
+      if (modState.character !== "player_player.swf") {
+        out = out.replace(
+          /content\/player_player\.swf(?=$|[?#])/i,
+          "content/" + modState.character
+        );
+      }
+      out = out.replace(
+        /content\/(level-[a-z0-9-]+\.swf)(?=$|[?#])/i,
+        (_, requestedSwf) => {
+          const targetMap =
+            requestedSwf.toLowerCase() === "level-pamp1.swf"
+              ? modState.map
+              : requestedSwf;
+          return resolveLevelPath(targetMap, modState.chaser);
+        }
+      );
+      return out;
+    }
+
+    // Intercept window.fetch before Ruffle loads
+    const origFetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+      let origUrl = "";
+      if (typeof input === "string") {
+        origUrl = input;
+      } else if (input instanceof URL) {
+        origUrl = input.href;
+      } else if (input instanceof Request) {
+        origUrl = input.url;
+      }
+
+      const mappedUrl = rewriteModUrl(origUrl);
+      if (mappedUrl !== origUrl) {
+        const nextInit = Object.assign({}, init, { cache: "no-store" });
+        if (input instanceof Request) {
+          return origFetch(new Request(mappedUrl, input), nextInit);
+        }
+        return origFetch(mappedUrl, nextInit);
+      }
+      return origFetch(input, init);
+    };
+
+    // XMLHttpRequest fallback interceptor
+    const origXhrOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+      const origUrl = typeof url === "string" ? url : String(url);
+      const mappedUrl = rewriteModUrl(origUrl);
+      return origXhrOpen.call(this, method, mappedUrl, ...rest);
+    };
+
+    window.RufflePlayer = window.RufflePlayer || {};
+    window.RufflePlayer.config = {
+      autoplay: "on",
+      unmuteOverlay: "hidden",
+    };
+
+    let currentPlayer = null;
+
+    // Synthetic keyboard dispatch for Android multi-touch controls
+    const KEY_DEFS = {
+      ArrowLeft: { key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+      ArrowRight: { key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+      ArrowUp: { key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+      Space: { key: " ", code: "Space", keyCode: 32 },
+    };
+
+    function createSyntheticKeyEvent(type, def) {
+      const ev = new KeyboardEvent(type, {
+        key: def.key,
+        code: def.code,
+        keyCode: def.keyCode,
+        which: def.keyCode,
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+      });
+      try {
+        Object.defineProperty(ev, "keyCode", { get: () => def.keyCode });
+        Object.defineProperty(ev, "which", { get: () => def.keyCode });
+      } catch (_) {}
+      return ev;
+    }
+
+    function dispatchKey(type, keyId) {
+      const def = KEY_DEFS[keyId];
+      if (!def) return;
+
+      const player = currentPlayer || document.querySelector("ruffle-player");
+      if (player) {
+        try {
+          if (type === "keydown" && typeof player.focus === "function") {
+            player.focus({ preventScroll: true });
+          }
+        } catch (_) {}
+
+        const innerTarget =
+          (player.shadowRoot &&
+            (player.shadowRoot.querySelector("canvas") ||
+              player.shadowRoot.getElementById("container"))) ||
+          player;
+        innerTarget.dispatchEvent(createSyntheticKeyEvent(type, def));
+      } else {
+        document.dispatchEvent(createSyntheticKeyEvent(type, def));
+        window.dispatchEvent(createSyntheticKeyEvent(type, def));
+      }
+    }
+
+    const activePointers = new Map(); // pointerId -> { btn, keys }
+    const keyCounts = new Map(); // keyId -> refcount
+
+    function updateButtonVisuals() {
+      const pressedBtns = new Set();
+      for (const entry of activePointers.values()) {
+        pressedBtns.add(entry.btn);
+      }
+      document.querySelectorAll(".touch-btn").forEach((btn) => {
+        btn.classList.toggle("pressed", pressedBtns.has(btn));
+      });
+    }
+
+    function releasePointer(pointerId) {
+      const entry = activePointers.get(pointerId);
+      if (!entry) return;
+      activePointers.delete(pointerId);
+      for (const k of entry.keys) {
+        const prev = keyCounts.get(k) || 0;
+        const next = Math.max(0, prev - 1);
+        keyCounts.set(k, next);
+        if (prev > 0 && next === 0) {
+          dispatchKey("keyup", k);
+        }
+      }
+      updateButtonVisuals();
+    }
+
+    function releaseAllTouchKeys() {
+      for (const pointerId of Array.from(activePointers.keys())) {
+        releasePointer(pointerId);
+      }
+    }
+
+    function installTouchControls() {
+      document.querySelectorAll(".touch-btn").forEach((btn) => {
+        const keys = (btn.dataset.keys || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+        btn.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (activePointers.has(e.pointerId)) return;
+          try {
+            btn.setPointerCapture(e.pointerId);
+          } catch (_) {}
+
+          activePointers.set(e.pointerId, { btn, keys });
+          for (const k of keys) {
+            const prev = keyCounts.get(k) || 0;
+            keyCounts.set(k, prev + 1);
+            if (prev === 0) {
+              dispatchKey("keydown", k);
+            }
+          }
+          updateButtonVisuals();
+        });
+
+        const onEnd = (e) => {
+          e.preventDefault();
+          releasePointer(e.pointerId);
+        };
+        btn.addEventListener("pointerup", onEnd);
+        btn.addEventListener("pointercancel", onEnd);
+        btn.addEventListener("lostpointercapture", onEnd);
+        btn.addEventListener("contextmenu", (e) => e.preventDefault());
+      });
+
+      window.addEventListener("blur", releaseAllTouchKeys);
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) releaseAllTouchKeys();
+      });
+    }
+
+    function syncHudUI() {
+      document.querySelectorAll(".char-btn").forEach((btn) => {
+        const active = btn.dataset.char === modState.character;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-pressed", String(active));
+      });
+
+      document.querySelectorAll(".chaser-btn").forEach((btn) => {
+        const active = btn.dataset.chaser === modState.chaser;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-pressed", String(active));
+      });
+
+      const touchControls = document.getElementById("touch-controls");
+      if (touchControls) {
+        touchControls.dataset.size = "md";
+      }
+
+      const isHospital = modState.map === "level-acil.swf";
+      const chaserOrigBtn = document.getElementById("chaser-orig-btn");
+      if (chaserOrigBtn) {
+        chaserOrigBtn.title = isHospital
+          ? "Hastane (Acil) haritasında Orijinal seçeneği Beril Hoca'dır"
+          : "Orijinal haritalardaki boğa / şehir kovalayanı";
+      }
+
+      const currentMap = MAPS.find((m) => m.swf === modState.map) || MAPS[0];
+      document.getElementById("level-trigger-text").textContent =
+        "Bölüm: " + currentMap.shortLabel;
+
+      document.querySelectorAll(".map-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.map === modState.map);
+      });
+    }
+
+    function setLevelPickerOpen(open) {
+      if (open) releaseAllTouchKeys();
+      const backdrop = document.getElementById("level-backdrop");
+      const trigger = document.getElementById("level-trigger");
+      backdrop.classList.toggle("open", open);
+      trigger.setAttribute("aria-expanded", String(open));
+    }
+
+    window.__closeLevelPickerIfOpen = function () {
+      const backdrop = document.getElementById("level-backdrop");
+      if (backdrop && backdrop.classList.contains("open")) {
+        setLevelPickerOpen(false);
+        return true;
+      }
+      return false;
+    };
+
+    function launchRuffle() {
+      releaseAllTouchKeys();
+      const container = document.getElementById("container");
+      container.innerHTML = "";
+      const ruffle = window.RufflePlayer.newest();
+      const player = ruffle.createPlayer();
+      currentPlayer = player;
+      container.appendChild(player);
+      player.ruffle().load({
+        url: "./game/extreme-pamplona.swf",
+        base: "./game/",
+      });
+    }
+
+    function buildLevelGrid() {
+      const grid = document.getElementById("level-grid");
+      grid.innerHTML = "";
+
+      MAPS.forEach((item) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "map-btn";
+        btn.dataset.map = item.swf;
+
+        const main = document.createElement("span");
+        main.className = "map-main";
+
+        const icon = document.createElement("span");
+        icon.className = "map-icon";
+        icon.textContent = item.icon;
+
+        const name = document.createElement("span");
+        name.className = "map-name";
+        name.textContent = item.label;
+
+        main.appendChild(icon);
+        main.appendChild(name);
+        btn.appendChild(main);
+
+        if (item.tag) {
+          const badge = document.createElement("span");
+          badge.className = "map-badge";
+          badge.textContent = item.tag;
+          btn.appendChild(badge);
+        }
+
+        btn.addEventListener("click", () => {
+          setLevelPickerOpen(false);
+          if (modState.map === item.swf) return;
+          modState.map = item.swf;
+          localStorage.setItem("pamplona_map", modState.map);
+          syncHudUI();
+          launchRuffle();
+        });
+
+        grid.appendChild(btn);
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      buildLevelGrid();
+      syncHudUI();
+      installTouchControls();
+
+      document.querySelectorAll(".char-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const nextChar = btn.dataset.char;
+          if (!CHARACTERS.has(nextChar) || modState.character === nextChar) return;
+          modState.character = nextChar;
+          localStorage.setItem("pamplona_char", modState.character);
+          syncHudUI();
+          launchRuffle();
+        });
+      });
+
+      document.querySelectorAll(".chaser-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const nextChaser = btn.dataset.chaser;
+          if (!CHASERS.has(nextChaser) || modState.chaser === nextChaser) return;
+          modState.chaser = nextChaser;
+          localStorage.setItem("pamplona_chaser", modState.chaser);
+          syncHudUI();
+          launchRuffle();
+        });
+      });
+
+      const trigger = document.getElementById("level-trigger");
+      const backdrop = document.getElementById("level-backdrop");
+      const closeBtn = document.getElementById("level-close");
+
+      trigger.addEventListener("click", () => {
+        const isOpen = backdrop.classList.contains("open");
+        setLevelPickerOpen(!isOpen);
+      });
+
+      closeBtn.addEventListener("click", () => setLevelPickerOpen(false));
+
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) setLevelPickerOpen(false);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && backdrop.classList.contains("open")) {
+          setLevelPickerOpen(false);
+        }
+      });
+
+      const disclaimerBackdrop = document.getElementById("disclaimer-backdrop");
+      const disclaimerAccept = document.getElementById("disclaimer-accept");
+      if (disclaimerBackdrop && disclaimerAccept) {
+        releaseAllTouchKeys();
+        const dismissDisclaimer = () => {
+          if (disclaimerBackdrop.classList.contains("dismissed")) return;
+          disclaimerBackdrop.classList.add("dismissed");
+          disclaimerBackdrop.setAttribute("aria-hidden", "true");
+          setTimeout(() => {
+            disclaimerBackdrop.style.display = "none";
+          }, 240);
+        };
+        disclaimerAccept.addEventListener("click", dismissDisclaimer);
+      }
+
+      const AUTH_HASH = "4fd83ab3055cadb28f33145eb8e5ed693e2bd4e70ae96ad17d12b90abb1b5117";
+      const AUTH_KEY = "sozluden_auth_v1";
+
+      async function sha256Hex(str) {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      function normalizePassword(raw) {
+        return raw.trim().replace(/İ/g, "i").replace(/I/g, "i").replace(/ı/g, "i").toLowerCase();
+      }
+
+      const authBackdrop = document.getElementById("auth-backdrop");
+      const authForm = document.getElementById("auth-form");
+      const authInput = document.getElementById("auth-input");
+      const authError = document.getElementById("auth-error");
+
+      function unlockGame() {
+        if (authBackdrop) authBackdrop.style.display = "none";
+        localStorage.setItem(AUTH_KEY, AUTH_HASH);
+        launchRuffle();
+      }
+
+      if (localStorage.getItem(AUTH_KEY) === AUTH_HASH) {
+        unlockGame();
+      } else {
+        if (authInput) authInput.focus();
+        if (authForm) {
+          authForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const normalized = normalizePassword(authInput ? authInput.value : "");
+            const digest = await sha256Hex(normalized);
+            if (digest === AUTH_HASH) {
+              if (authError) authError.textContent = "";
+              unlockGame();
+            } else {
+              if (authError) authError.textContent = "Hatalı şifre, tekrar dene.";
+              if (authInput) {
+                authInput.value = "";
+                authInput.focus();
+              }
+            }
+          });
+        }
+      }
+    });
+  </script>
+  <script>
+    // True 0.5*(L+R) mono bus + zero-overshoot WaveShaper limiter -> AudioDestinationNode
+    (function installWebAudioLimiter() {
+      if (typeof AudioNode === "undefined" || !AudioNode.prototype.connect) return;
+
+      const origConnect = AudioNode.prototype.connect;
+      const origDisconnect = AudioNode.prototype.disconnect;
+      const chains = new WeakMap();
+
+      function isLiveAudioContext(ctx) {
+        if (!ctx) return false;
+        if (typeof AudioContext !== "undefined" && ctx instanceof AudioContext) return true;
+        if (typeof webkitAudioContext !== "undefined" && ctx instanceof webkitAudioContext) return true;
+        return false;
+      }
+
+      function getOrCreateLimiterInput(dest) {
+        const ctx = dest && dest.context;
+        if (!isLiveAudioContext(ctx)) return null;
+
+        let entry = chains.get(ctx);
+        if (entry) return entry.input;
+
+        try {
+          const masterIn = ctx.createGain();
+          masterIn.gain.value = 1.0;
+          masterIn.channelCount = 2;
+          masterIn.channelCountMode = "explicit";
+          masterIn.channelInterpretation = "speakers";
+
+          const splitter = ctx.createChannelSplitter(2);
+          const leftHalf = ctx.createGain();
+          leftHalf.gain.value = 0.5;
+          const rightHalf = ctx.createGain();
+          rightHalf.gain.value = 0.5;
+
+          const monoSum = ctx.createGain();
+          monoSum.gain.value = 0.5;
+          monoSum.channelCount = 1;
+          monoSum.channelCountMode = "explicit";
+          monoSum.channelInterpretation = "discrete";
+
+          const shaper = ctx.createWaveShaper();
+          const N = 8192;
+          const curve = new Float32Array(N);
+          const ceiling = 0.62;
+          for (let i = 0; i < N; i++) {
+            const x = (i * 2) / (N - 1) - 1;
+            curve[i] = ceiling * Math.tanh((2 * x) / ceiling);
+          }
+          shaper.curve = curve;
+          shaper.oversample = "none";
+
+          const masterOut = ctx.createGain();
+          masterOut.gain.value = 0.95;
+          masterOut.channelCount = 2;
+          masterOut.channelCountMode = "explicit";
+          masterOut.channelInterpretation = "speakers";
+          masterOut.__isLimiterOut = true;
+
+          origConnect.call(masterIn, splitter);
+          origConnect.call(splitter, leftHalf, 0);
+          origConnect.call(splitter, rightHalf, 1);
+          origConnect.call(leftHalf, monoSum);
+          origConnect.call(rightHalf, monoSum);
+          origConnect.call(monoSum, shaper);
+          origConnect.call(shaper, masterOut);
+          origConnect.call(masterOut, dest);
+
+          entry = { input: masterIn, output: masterOut, dest: dest };
+          chains.set(ctx, entry);
+          return entry.input;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      AudioNode.prototype.connect = function (target, outputIndex, inputIndex) {
+        if (
+          target &&
+          typeof AudioDestinationNode !== "undefined" &&
+          target instanceof AudioDestinationNode
+        ) {
+          const limiterInput = getOrCreateLimiterInput(target);
+          if (limiterInput) {
+            if (outputIndex !== undefined) {
+              origConnect.call(this, limiterInput, outputIndex, inputIndex !== undefined ? inputIndex : 0);
+            } else {
+              origConnect.call(this, limiterInput);
+            }
+            return target;
+          }
+        }
+        return origConnect.apply(this, arguments);
+      };
+
+      if (typeof origDisconnect === "function") {
+        AudioNode.prototype.disconnect = function (target, outputIndex, inputIndex) {
+          if (
+            target &&
+            typeof AudioDestinationNode !== "undefined" &&
+            target instanceof AudioDestinationNode &&
+            target.context &&
+            chains.has(target.context)
+          ) {
+            const entry = chains.get(target.context);
+            if (outputIndex !== undefined) {
+              return origDisconnect.call(
+                this,
+                entry.input,
+                outputIndex,
+                inputIndex !== undefined ? inputIndex : 0
+              );
+            }
+            return origDisconnect.call(this, entry.input);
+          }
+          return origDisconnect.apply(this, arguments);
+        };
+      }
+    })();
+  </script>
+  <script src="./ruffle.js"></script>
+</body>
+</html>
