@@ -664,6 +664,51 @@
       width: 100%;
     }
 
+    /* Startup Fullscreen Prompt Modal */
+    #fs-prompt-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 5, 3, 0.86);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 80;
+    }
+
+    .fs-prompt-card {
+      width: min(340px, 90%);
+      background: linear-gradient(180deg, #1b150e 0%, #0e0a06 100%);
+      border: 2px solid #d4a63f;
+      border-radius: 10px;
+      padding: 16px 18px 18px;
+      box-shadow:
+        0 0 0 1px rgba(255, 224, 102, 0.22),
+        inset 0 1px 0 rgba(255, 224, 102, 0.22),
+        0 18px 44px rgba(0, 0, 0, 0.88);
+      color: #f4e6c8;
+      text-align: center;
+      animation: popIn 0.16s ease-out;
+    }
+
+    .fs-prompt-primary {
+      width: 100%;
+      padding: 12px 18px;
+      font-size: 15px;
+    }
+
+    .fs-prompt-skip {
+      margin-top: 10px;
+      background: none;
+      border: none;
+      color: rgba(244, 230, 200, 0.7);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
     @media (max-width: 860px) {
       .char-pill-label {
         display: none;
@@ -758,6 +803,18 @@
           Bu eserde yer alan tüm karakterler hayal ürünüdür. Yaşayan veya ölmüş gerçek kişilerle olan herhangi bir benzerlik tamamen tesadüftür.
         </p>
         <button id="disclaimer-accept" class="disclaimer-btn" type="button">Anladım — Oyuna Geç</button>
+      </div>
+    </div>
+
+    <div id="fs-prompt-backdrop" role="dialog" aria-modal="true" aria-labelledby="fs-prompt-title">
+      <div class="fs-prompt-card">
+        <div class="disclaimer-header">
+          <span class="disclaimer-seal" aria-hidden="true">⛶</span>
+          <span id="fs-prompt-title" class="disclaimer-title">TAM EKRAN</span>
+        </div>
+        <p class="disclaimer-body">En iyi oyun deneyimi için tam ekrana geç.</p>
+        <button id="fs-prompt-enter" class="disclaimer-btn fs-prompt-primary" type="button">⛶ Tam Ekran Yap</button>
+        <button id="fs-prompt-skip" class="fs-prompt-skip" type="button">Normal ekranda devam et</button>
       </div>
     </div>
 
@@ -1180,6 +1237,50 @@
     window.addEventListener("DOMContentLoaded", () => {
       syncViewportSize();
 
+      async function enterFullscreen() {
+        try {
+          const root = document.documentElement;
+          if (root.requestFullscreen) await root.requestFullscreen();
+          else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
+          if (
+            window.matchMedia &&
+            window.matchMedia("(pointer: coarse)").matches &&
+            screen.orientation &&
+            typeof screen.orientation.lock === "function"
+          ) {
+            try {
+              await screen.orientation.lock("landscape");
+            } catch (_) {}
+          }
+        } catch (_) {}
+        syncViewportSize();
+      }
+
+      const fsPromptBackdrop = document.getElementById("fs-prompt-backdrop");
+      const fsPromptEnter = document.getElementById("fs-prompt-enter");
+      const fsPromptSkip = document.getElementById("fs-prompt-skip");
+      const hideFsPrompt = () => {
+        if (fsPromptBackdrop) fsPromptBackdrop.style.display = "none";
+      };
+      const isAlreadyFullscreen = Boolean(
+        document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches) ||
+          window.navigator.standalone
+      );
+      if (isAlreadyFullscreen) {
+        hideFsPrompt();
+      }
+      if (fsPromptEnter) {
+        fsPromptEnter.addEventListener("click", async () => {
+          await enterFullscreen();
+          hideFsPrompt();
+        });
+      }
+      if (fsPromptSkip) {
+        fsPromptSkip.addEventListener("click", hideFsPrompt);
+      }
+
       const fsBtn = document.getElementById("fs-btn");
       if (fsBtn) {
         const fsSupported = Boolean(document.fullscreenEnabled || document.webkitFullscreenEnabled);
@@ -1188,6 +1289,7 @@
         } else {
           const updateFsBtn = () => {
             const active = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+            if (active) hideFsPrompt();
             fsBtn.textContent = active ? "✕" : "⛶";
             fsBtn.title = active ? "Tam Ekrandan Çık" : "Tam Ekran";
             fsBtn.setAttribute("aria-label", fsBtn.title);
@@ -1202,19 +1304,7 @@
                 if (document.exitFullscreen) await document.exitFullscreen();
                 else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
               } else {
-                const root = document.documentElement;
-                if (root.requestFullscreen) await root.requestFullscreen();
-                else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
-                if (
-                  window.matchMedia &&
-                  window.matchMedia("(pointer: coarse)").matches &&
-                  screen.orientation &&
-                  typeof screen.orientation.lock === "function"
-                ) {
-                  try {
-                    await screen.orientation.lock("landscape");
-                  } catch (_) {}
-                }
+                await enterFullscreen();
               }
             } catch (_) {}
           });
