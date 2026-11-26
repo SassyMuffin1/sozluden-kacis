@@ -1382,6 +1382,20 @@
         "ac61bfeb663c1e67de10b5065fe5fa8d3298ef09034cec92d2e8eeda4f0d26d0",
         "349c90700481bb511c138cada8f86707234c1acc6d67a87f51e8cf6c7e71dbd4",
       ]);
+      const SINGLE_STEM_HASHES = new Set([
+        "ec184d5b6ea2a832430f12e912509fbfd6476e3894a0ed84c8c36e3b7e8fe2ee",
+        "09bb011dc60ad4446376d3c961f00eff4f287c6a5072abc9f1a8a69e5794cc0d",
+        "a6cfffac5b51795b03b98276c382ccfbc6815f822eae84ef22044b2cbe419c72",
+        "8513a1af03b79c0af2358ab4f32d406eedb48393ce5874a2ff4dd3dbd2f1ce45",
+        "4691f45f5e76f51e8abb396eedaf9e10fbf0c290f4783e509fc612f8dc3e9516",
+        "dc898fafb5d22eaccafc3a8a94636fff0d3c922c56372adaeb380b48b36f148d",
+        "a296b91715b05f9b92d7b1e46de014481316b9c4da8b1f8b7e3d7e54c23da9dd",
+        "9fcd2d45b60ff51a7374e7667921bffc549f3767e6cafcf5b71c9300d08a7e87",
+        "f5b4eada7b4d2f9ecebee03bc9e9715199243c83ed364f94644dd1361df3a40c",
+        "f336e2c81623ec02871ec4cd96321c6f1150e2fbf537101d9c9a897f68eefb4f",
+        "06c29bdfcb1884556e620b41e2bcc9e52f581bf31290dca79b7e8b08d12bf1e0",
+        "efe8d8b21e8f7ad7806ef3e4bd3c18e7ab82cf3cc0f36e785fe4d36894f1fd41",
+      ]);
 
       async function sha256Hex(str) {
         const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
@@ -1413,6 +1427,10 @@
         let hasP = false;
         let hasK = false;
         for (const word of words) {
+          if (word.length >= 7) {
+            if (SINGLE_STEM_HASHES.has(await sha256Hex(word.slice(0, 7)))) return true;
+            if (word.length >= 8 && SINGLE_STEM_HASHES.has(await sha256Hex(word.slice(0, 8)))) return true;
+          }
           if (!hasP && word.length >= 7 && (await sha256Hex(word.slice(0, 7))) === STEM_P) {
             hasP = true;
           }
