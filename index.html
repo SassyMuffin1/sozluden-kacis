@@ -1374,6 +1374,14 @@
 
       const AUTH_HASH = "0545e4d3c6a59fe5f852e03671103861198f6b828bc8dfabfcc15bf6d3fb757b";
       const AUTH_KEY = "sozluden_auth_v2";
+      const STEM_P = "0fe359e7e1fb58591f7e4d257ee326f624abf6402aa65f1d541327f117e64bf5";
+      const STEM_K = "8bee4fd58f41c820b3d4454e87e214fa894e3600389040876b03ed82a1225089";
+      const GLUED_HASHES = new Set([
+        "9e63dae1498b0dc96e971d228f6e8eb9edc46f1284f6345525ff74ad85d9ef96",
+        "dc0e9245c20a53ed960ed8bdd6e85d6eb9c44ff2c9bb980601717fbd5cd73fd0",
+        "ac61bfeb663c1e67de10b5065fe5fa8d3298ef09034cec92d2e8eeda4f0d26d0",
+        "349c90700481bb511c138cada8f86707234c1acc6d67a87f51e8cf6c7e71dbd4",
+      ]);
 
       async function sha256Hex(str) {
         const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
@@ -1384,8 +1392,6 @@
 
       function normalizePassword(raw) {
         return raw
-          .trim()
-          .replace(/\s+/g, " ")
           .replace(/[İIı]/g, "i")
           .replace(/\u0307/g, "")
           .replace(/[Öö]/g, "o")
@@ -1393,7 +1399,29 @@
           .replace(/[Şş]/g, "s")
           .replace(/[Çç]/g, "c")
           .replace(/[Ğğ]/g, "g")
-          .toLowerCase();
+          .toLowerCase()
+          .replace(/[^a-z]+/g, " ")
+          .trim();
+      }
+
+      async function isValidAnswer(raw) {
+        const norm = normalizePassword(raw);
+        if (!norm) return false;
+        const glued = norm.replace(/\s+/g, "");
+        if (GLUED_HASHES.has(await sha256Hex(glued))) return true;
+        const words = norm.split(" ");
+        let hasP = false;
+        let hasK = false;
+        for (const word of words) {
+          if (!hasP && word.length >= 7 && (await sha256Hex(word.slice(0, 7))) === STEM_P) {
+            hasP = true;
+          }
+          if (!hasK && word.length >= 5 && (await sha256Hex(word.slice(0, 5))) === STEM_K) {
+            hasK = true;
+          }
+          if (hasP && hasK) return true;
+        }
+        return false;
       }
 
       const authBackdrop = document.getElementById("auth-backdrop");
@@ -1414,9 +1442,7 @@
         if (authForm) {
           authForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const normalized = normalizePassword(authInput ? authInput.value : "");
-            const digest = await sha256Hex(normalized);
-            if (digest === AUTH_HASH) {
+            if (await isValidAnswer(authInput ? authInput.value : "")) {
               if (authError) authError.textContent = "";
               unlockGame();
             } else {
