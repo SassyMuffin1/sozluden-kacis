@@ -824,8 +824,8 @@
           <span class="disclaimer-seal" aria-hidden="true">🔒</span>
           <span id="auth-title" class="disclaimer-title">GİRİŞ ŞİFRESİ</span>
         </div>
-        <p class="disclaimer-body">Oyuna girmek için şifreyi girin.</p>
-        <input id="auth-input" class="auth-input" type="password" placeholder="Şifre..." autocomplete="off" required />
+        <p class="disclaimer-body">En sevdiğin yemek ne?</p>
+        <input id="auth-input" class="auth-input" type="text" placeholder="Cevabını yaz..." autocomplete="off" required />
         <div id="auth-error" class="auth-error" aria-live="polite"></div>
         <button id="auth-submit" class="disclaimer-btn auth-btn" type="submit">Giriş Yap</button>
       </form>
@@ -1372,8 +1372,8 @@
         disclaimerAccept.addEventListener("click", dismissDisclaimer);
       }
 
-      const AUTH_HASH = "4fd83ab3055cadb28f33145eb8e5ed693e2bd4e70ae96ad17d12b90abb1b5117";
-      const AUTH_KEY = "sozluden_auth_v1";
+      const AUTH_HASH = "0545e4d3c6a59fe5f852e03671103861198f6b828bc8dfabfcc15bf6d3fb757b";
+      const AUTH_KEY = "sozluden_auth_v2";
 
       async function sha256Hex(str) {
         const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
@@ -1383,7 +1383,17 @@
       }
 
       function normalizePassword(raw) {
-        return raw.trim().replace(/İ/g, "i").replace(/I/g, "i").replace(/ı/g, "i").toLowerCase();
+        return raw
+          .trim()
+          .replace(/\s+/g, " ")
+          .replace(/[İIı]/g, "i")
+          .replace(/\u0307/g, "")
+          .replace(/[Öö]/g, "o")
+          .replace(/[Üü]/g, "u")
+          .replace(/[Şş]/g, "s")
+          .replace(/[Çç]/g, "c")
+          .replace(/[Ğğ]/g, "g")
+          .toLowerCase();
       }
 
       const authBackdrop = document.getElementById("auth-backdrop");
@@ -1410,7 +1420,7 @@
               if (authError) authError.textContent = "";
               unlockGame();
             } else {
-              if (authError) authError.textContent = "Hatalı şifre, tekrar dene.";
+              if (authError) authError.textContent = "Yanlış cevap, tekrar dene.";
               if (authInput) {
                 authInput.value = "";
                 authInput.focus();
